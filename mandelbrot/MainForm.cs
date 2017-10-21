@@ -8,107 +8,73 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Numerics;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 
 namespace mandelbrot
 {
     public partial class MainForm : Form
     {
-        private Thread workerThread = null;
-        private delegate void ThreadSafeDelegate();
-
-        private int x = 0;
-        private int y = 0;
-
         public MainForm()
         {
             InitializeComponent();
-        }
 
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (workerThread != null)
+            if (this.BackgroundImage == null) this.BackgroundImage = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height, PixelFormat.Format32bppArgb);
+
+            Bitmap b = new Bitmap(this.BackgroundImage);
+
+            // Lock the bitmap's bits.
+            BitmapData bmpData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
+
+            byte[] argbValues = new byte[Math.Abs(bmpData.Stride) * b.Height];
+
+            // Copy the ARGB values into the array.
+            Marshal.Copy(bmpData.Scan0, argbValues, 0, argbValues.Length);
+
+            Color color = Color.FromArgb(0, 0, 0, 0);
+
+            for (int x = 0; x < b.Width; x++)
             {
-                workerThread.Abort();
-                workerThread.Join();
-                workerThread = null;
-            }
-        }
-
-        private void MainForm_Shown(object sender, EventArgs e)
-        {
-            if (workerThread == null)
-            {
-                workerThread = new Thread(new ThreadStart(threadProcess));
-                workerThread.Start();
-                while (!workerThread.IsAlive) ;
-            }
-        }
-
-
-        private void threadProcess()
-        {
-            while (true)
-            {
-                try
+                for (int y = 0; y < b.Height; y++)
                 {
-                    render();
-                    Thread.Sleep(1); // To not saturate a core
-                }
-                catch (ThreadAbortException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    break;
+                    color = getColor(-2.5f + 3.5f * ((float)x / (float)b.Width), -1.0f + 2.0f * ((float)y / (float)b.Height), 100);
+
+                    argbValues[(y * b.Width + x) * 4 + 0] = color.A;
+                    argbValues[(y * b.Width + x) * 4 + 1] = color.R;
+                    argbValues[(y * b.Width + x) * 4 + 2] = color.G;
+                    argbValues[(y * b.Width + x) * 4 + 3] = color.B;
                 }
             }
+
+            // Copy the ARGB values back to the bitmap
+            Marshal.Copy(argbValues, 0, bmpData.Scan0, argbValues.Length);
+
+            // Unlock the bits.
+            b.UnlockBits(bmpData);
+
+            this.BackgroundImage = (Image)b;
         }
 
-
-        private void render()
+        private Color getColor(float x0, float y0, int maxIterations)
         {
-            if (this.InvokeRequired)
+            // x0 - scaled x coordinate of pixel (scaled to lie in the Mandelbrot X scale (-2.5, 1))
+            // y0 - scaled y coordinate of pixel (scaled to lie in the Mandelbrot Y scale (-1, 1))
+
+            float x = 0.0f;
+            float y = 0.0f;
+            int iteration = 0;
+            float temp = 0.0f;
+
+            while ((x*x + y*y < 2*2) && (iteration < maxIterations))
             {
-                ThreadSafeDelegate d = new ThreadSafeDelegate(render);
-                this.Invoke(d);
+                temp = x*x - y*y + x0;
+                y = 2*x*y + y0;
+                x = temp;
+                iteration = iteration + 1;
             }
-            else
-            {
-                if (this.BackgroundImage == null) this.BackgroundImage = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height, PixelFormat.Format32bppArgb);
 
-                Random r = new Random(Guid.NewGuid().GetHashCode());
-
-                Bitmap b = new Bitmap(this.BackgroundImage);
-
-                // Lock the bitmap's bits.
-                BitmapData bmpData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
-
-                byte[] argbValues = new byte[Math.Abs(bmpData.Stride) * b.Height];
-
-                // Copy the ARGB values into the array.
-                System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, argbValues, 0, argbValues.Length);
-
-                for (int i = 0; i < b.Width * b.Height; i++)
-                {
-                    argbValues[i*4+0] = (byte)r.Next(254);
-                    argbValues[i*4+1] = (byte)r.Next(254);
-                    argbValues[i*4+2] = (byte)r.Next(254);
-                    argbValues[i*4+3] = (byte)r.Next(254);
-                }
-
-                // Copy the ARGB values back to the bitmap
-                System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, bmpData.Scan0, argbValues.Length);
-
-                // Unlock the bits.
-                b.UnlockBits(bmpData);
-
-                this.BackgroundImage = (Image)b;
-            }
+            return Color.FromArgb(iteration * 254 / maxIterations, iteration * 254 / maxIterations, iteration * 254 / maxIterations, iteration * 254 / maxIterations);
         }
     }
 }
