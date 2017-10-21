@@ -1,0 +1,9 @@
+C:\Users\user\Desktop\mandelbrot\mandelbrot\bin\Debug\mandelbrot.exe.config
+C:\Users\user\Desktop\mandelbrot\mandelbrot\bin\Debug\mandelbrot.exe
+C:\Users\user\Desktop\mandelbrot\mandelbrot\bin\Debug\mandelbrot.pdb
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.csprojResolveAssemblyReference.cache
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.Properties.Resources.resources
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.csproj.GenerateResource.Cache
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.exe
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.pdb
+C:\Users\user\Desktop\mandelbrot\mandelbrot\obj\Debug\mandelbrot.MainForm.resources
