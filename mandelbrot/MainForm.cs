@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,32 +79,33 @@ namespace mandelbrot
             }
             else
             {
-                if (this.BackgroundImage == null) this.BackgroundImage = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+                if (this.BackgroundImage == null) this.BackgroundImage = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height, PixelFormat.Format32bppArgb);
 
-                Bitmap b = new Bitmap(this.BackgroundImage);
                 Random r = new Random(Guid.NewGuid().GetHashCode());
 
-                for (int n = 0; n < 10000; n++)
-                {
-                    b.SetPixel(x, y, Color.FromArgb(r.Next(0, 254), r.Next(0, 254), r.Next(0, 254), r.Next(0, 254)));
+                Bitmap b = new Bitmap(this.BackgroundImage);
 
-                    if (x < b.Width-1)
-                    {
-                        x++;
-                    }
-                    else
-                    {
-                        x = 0;
-                        if (y < b.Height-1)
-                        {
-                            y++;
-                        }
-                        else
-                        {
-                            y = 0;
-                        }
-                    }
+                // Lock the bitmap's bits.
+                BitmapData bmpData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
+
+                byte[] argbValues = new byte[Math.Abs(bmpData.Stride) * b.Height];
+
+                // Copy the ARGB values into the array.
+                System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, argbValues, 0, argbValues.Length);
+
+                for (int i = 0; i < b.Width * b.Height; i++)
+                {
+                    argbValues[i*4+0] = (byte)r.Next(254);
+                    argbValues[i*4+1] = (byte)r.Next(254);
+                    argbValues[i*4+2] = (byte)r.Next(254);
+                    argbValues[i*4+3] = (byte)r.Next(254);
                 }
+
+                // Copy the ARGB values back to the bitmap
+                System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, bmpData.Scan0, argbValues.Length);
+
+                // Unlock the bits.
+                b.UnlockBits(bmpData);
 
                 this.BackgroundImage = (Image)b;
             }
