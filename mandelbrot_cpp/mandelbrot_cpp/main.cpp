@@ -133,8 +133,8 @@ int main()
 		return -1;
 	}
 
-	const int width = 1235;
-	const int height = 123;
+	const int width = 1024;
+	const int height = 512;
 
 	std::vector<uint8_t> pixel_data(width * height * 4);
 	std::fill(pixel_data.begin(), pixel_data.end(), 0);
@@ -147,7 +147,19 @@ int main()
 		return -1;
 	}
 
+	const cl_float x_min = -2.0;
+	const cl_float x_max = 1.0;
+	const cl_float y_min = -1.0;
+	const cl_float y_max = 1.0;
+
+	const cl_uint max_iterations = 100;
+
 	kernel.setArg(0, output_image);
+	kernel.setArg(1, x_min);
+	kernel.setArg(2, x_max);
+	kernel.setArg(3, y_min);
+	kernel.setArg(4, y_max);
+	kernel.setArg(5, max_iterations);
 
 	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(width, height));
 
@@ -165,7 +177,7 @@ int main()
 
 	try
 	{
-		save_to_bmp_file("test.bmp", width, height, pixel_data);
+		save_to_bmp_file("mandelbrot.bmp", width, height, pixel_data);
 	}
 	catch (std::exception ex)
 	{
@@ -173,7 +185,7 @@ int main()
 		return -1;
 	}
 
-	std::cout << "file written" << std::endl;
+	std::cout << "Bitmap file written." << std::endl;
 
 	return 0;
 }
