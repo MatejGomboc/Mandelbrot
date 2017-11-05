@@ -133,8 +133,8 @@ int main()
 		return -1;
 	}
 
-	const int width = 1024;
-	const int height = 512;
+	const int width = 2048;
+	const int height = 1024;
 
 	std::vector<uint8_t> pixel_data(width * height * 4);
 	std::fill(pixel_data.begin(), pixel_data.end(), 0);
@@ -152,7 +152,7 @@ int main()
 	const cl_float y_min = -1.0;
 	const cl_float y_max = 1.0;
 
-	const cl_uint max_iterations = 100;
+	const cl_uint max_iterations = 40;
 
 	kernel.setArg(0, output_image);
 	kernel.setArg(1, x_min);
