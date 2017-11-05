@@ -21,9 +21,15 @@
     <ClCompile Include="bitmap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="opencl_mb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opencl_mb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

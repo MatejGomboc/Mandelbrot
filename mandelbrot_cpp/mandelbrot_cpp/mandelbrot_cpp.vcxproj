@@ -96,9 +96,11 @@
   <ItemGroup>
     <ClCompile Include="bitmap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="opencl_mb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h" />
+    <ClInclude Include="opencl_mb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="mandelbrot.cl" />
