@@ -133,8 +133,8 @@ int main()
 		return -1;
 	}
 
-	const int width = 2048;
-	const int height = 1024;
+	const int width = 3000;
+	const int height = 2000;
 
 	std::vector<uint8_t> pixel_data(width * height * 4);
 	std::fill(pixel_data.begin(), pixel_data.end(), 0);

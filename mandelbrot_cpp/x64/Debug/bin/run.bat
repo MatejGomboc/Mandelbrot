@@ -1,0 +1,2 @@
+mandelbrot_cpp.exe
+pause

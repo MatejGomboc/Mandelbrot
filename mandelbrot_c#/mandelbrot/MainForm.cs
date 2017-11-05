@@ -16,7 +16,7 @@ namespace mandelbrot
 {
     public partial class MainForm : Form
     {
-        private const int maxIterations = 50;
+        private const int maxIterations = 100;
 
         public MainForm()
         {
@@ -25,10 +25,13 @@ namespace mandelbrot
             MainForm_Resize(this, null);
         }
 
-        private int getValue(float x0, float y0)
+        private int getValue(float x_start, float y_start, float x_min, float x_max, float y_min, float y_max)
         {
-            // x0 - scaled x coordinate of pixel (scaled to lie in the Mandelbrot X scale (-2.5, 1))
-            // y0 - scaled y coordinate of pixel (scaled to lie in the Mandelbrot Y scale (-1, 1))
+            // Mandelbrot X scale (-2.5, 1)
+            // Mandelbrot Y scale (-1, 1)
+
+            float x0 = x_start * (x_max - x_min) + x_min;
+            float y0 = y_start * (y_max - y_min) + y_min;
 
             float x = 0.0f;
             float y = 0.0f;
@@ -46,34 +49,29 @@ namespace mandelbrot
             return iteration;
         }
 
-        public static Color Rainbow(float progress)
+        public static Color Rainbow(double progress)
         {
-            float div = (Math.Abs(progress % 1) * 6);
-            int ascending = (int)((progress % 1) * 255);
-            int descending = 255 - ascending;
+            const double freq1 = 2 * Math.PI;
+            const double freq2 = 2 * Math.PI;
+            const double freq3 = 2 * Math.PI;
 
-            switch ((int)div)
-            {
-                case 0:
-                    return Color.FromArgb(255, 255, ascending, 0); // RED -> YELLOW
-                case 1:
-                    return Color.FromArgb(255, descending, 255, 0); // YELLOW -> GREEEN
-                case 2:
-                    return Color.FromArgb(255, 0, 255, ascending); // GREEN -> CYAN
-                case 3:
-                    return Color.FromArgb(255, 0, descending, 255); // CYAN -> BLUE
-                case 4:
-                    return Color.FromArgb(255, ascending, 0, 255); // BLUE -> MAGENTA
-                case 5:
-                    return Color.FromArgb(255, 255, 0, descending); // MAGENTA -> RED
-                default:
-                    return Color.Black;
-            }
+            const double phase1 = 0.0;
+            const double phase2 = Math.PI / 2;
+            const double phase3 = Math.PI;
+
+            const double center = 127.0;
+            const double width = 127.0;
+
+            return Color.FromArgb(
+                (int)(Math.Sin(freq1 * progress - phase1) * width + center),
+                (int)(Math.Sin(freq2 * progress - phase2) * width + center),
+                (int)(Math.Sin(freq3 * progress - phase3) * width + center),
+                254);
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
         {
-            this.BackgroundImage = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height, PixelFormat.Format32bppArgb);
+            this.BackgroundImage = new Bitmap(2048, 1024, PixelFormat.Format32bppArgb);
 
             Bitmap b = new Bitmap(this.BackgroundImage);
 
@@ -88,9 +86,12 @@ namespace mandelbrot
             {
                 for (int y = 0; y < b.Height; y++)
                 {
-                    mandelbrot_values[x, y] = getValue(-2.5f + 3.5f * ((float)x / (float)b.Width), -1.0f + 2.0f * ((float)y / (float)b.Height));
+                    mandelbrot_values[x, y] = getValue((float)x / (float)b.Width, (float)y / (float)b.Height, -2.0f, 1.0f, -1.0f, 1.0f);
                 }
             }
+
+            //int min = mandelbrot_values.Cast<int>().Min();
+            //int max = mandelbrot_values.Cast<int>().Max();
 
             // Copy the ARGB values into the array.
             Marshal.Copy(bmpData.Scan0, argbValues, 0, argbValues.Length);
@@ -99,7 +100,7 @@ namespace mandelbrot
             {
                 for (int y = 0; y < b.Height; y++)
                 {
-                    Color color = Rainbow((float)mandelbrot_values[x, y] / (float)maxIterations);
+                    Color color = Rainbow((double)mandelbrot_values[x, y] / (double)maxIterations);
 
                     argbValues[(y * b.Width + x) * 4 + 0] = color.A;
                     argbValues[(y * b.Width + x) * 4 + 1] = color.R;

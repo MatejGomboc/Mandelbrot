@@ -1,3 +1,7 @@
+#define M_2_PI 6.283185307179586476925286766559f
+#define M_PI_2 1.5707963267948966192313216916398f
+#define M_PI 3.1415926535897932384626433832795f
+
 kernel void mandelbrot (
 		write_only image2d_t output_image,
 		const float x_min,
@@ -22,6 +26,13 @@ kernel void mandelbrot (
 		x = temp;
 		iteration = iteration + 1;
 	}
+	
+	float quotient = (float)iteration / (float)max_iterations;
 
-	write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)((float)iteration / (float)max_iterations));
+	write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(
+		sin(M_2_PI * quotient) + 0.5f,
+		sin(M_2_PI * quotient - M_PI_2) + 0.5f,
+		sin(M_2_PI * quotient - M_PI) + 0.5f,
+		0.0f
+	));
 }
