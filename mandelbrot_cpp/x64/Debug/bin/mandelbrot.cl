@@ -33,6 +33,6 @@ kernel void mandelbrot (
 		sin(M_2_PI * quotient) + 0.5f,
 		sin(M_2_PI * quotient - M_PI_2) + 0.5f,
 		sin(M_2_PI * quotient - M_PI) + 0.5f,
-		0.0f
+		1.0f
 	));
 }

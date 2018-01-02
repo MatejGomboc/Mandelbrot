@@ -5,11 +5,10 @@
 #include "opencl_mb.h"
 #include "bitmap.h"
 
-
 int main()
 {
-	const int width = 3000;
-	const int height = 2000;
+	const unsigned width = 3000;
+	const unsigned height = 2000;
 
 	std::vector<uint8_t> pixel_data(width * height * 4);
 	std::fill(pixel_data.begin(), pixel_data.end(), 0);
@@ -29,7 +28,7 @@ int main()
 
 	std::cout << std::string(get_status_message()) << "\nOpenCL initialised." << std::endl;
 
-	if (!get_image_opencl(pixel_data))
+	if (!get_image_opencl(pixel_data, width, height, x_min, x_max, y_min, y_max, max_iterations))
 	{
 		std::cerr << "Failed to get image from OpenCL.\n" << std::string(get_status_message()) << std::endl;
 		return -1;

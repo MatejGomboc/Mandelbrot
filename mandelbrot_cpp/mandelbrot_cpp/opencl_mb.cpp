@@ -114,7 +114,7 @@ bool init_opencl()
 }
 
 
-bool get_image_opencl(std::vector<uint8_t>& pixel_data, const int width, const int height, const float x_min, const float x_max,
+bool get_image_opencl(std::vector<uint8_t>& pixel_data, const unsigned width, const unsigned height, const float x_min, const float x_max,
 	const float y_min, const float y_max, const unsigned max_iterations)
 {
 	try
