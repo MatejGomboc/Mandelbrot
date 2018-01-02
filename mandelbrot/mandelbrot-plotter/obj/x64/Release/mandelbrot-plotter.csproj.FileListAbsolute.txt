@@ -1,0 +1,7 @@
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\bin\x64\Release\mandelbrot-plotter.exe
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\bin\x64\Release\mandelbrot-plotter.pdb
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\obj\x64\Release\mandelbrot_plotter.MainForm.resources
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\obj\x64\Release\mandelbrot_plotter.Properties.Resources.resources
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\obj\x64\Release\mandelbrot-plotter.csproj.GenerateResource.Cache
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\obj\x64\Release\mandelbrot-plotter.exe
+C:\Users\user\Desktop\Mandelbrot\mandelbrot\mandelbrot-plotter\obj\x64\Release\mandelbrot-plotter.pdb

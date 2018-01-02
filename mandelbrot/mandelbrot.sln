@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mandelbrot-plotter", "mandelbrot-plotter\mandelbrot-plotter.csproj", "{ACE5F9FE-AB23-475E-8699-A1BC635AA799}"
+	ProjectSection(ProjectDependencies) = postProject
+		{118DDAD7-583B-45DC-9A0E-4372759D1025} = {118DDAD7-583B-45DC-9A0E-4372759D1025}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mandelbrot-dll", "mandelbrot-dll\mandelbrot-dll.vcxproj", "{118DDAD7-583B-45DC-9A0E-4372759D1025}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Debug|x64.ActiveCfg = Debug|x64
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Debug|x64.Build.0 = Debug|x64
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Debug|x64.Deploy.0 = Debug|x64
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Release|x64.ActiveCfg = Debug|x64
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Release|x64.Build.0 = Debug|x64
+		{ACE5F9FE-AB23-475E-8699-A1BC635AA799}.Release|x64.Deploy.0 = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Debug|x64.ActiveCfg = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Debug|x64.Build.0 = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Debug|x64.Deploy.0 = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Release|x64.ActiveCfg = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Release|x64.Build.0 = Debug|x64
+		{118DDAD7-583B-45DC-9A0E-4372759D1025}.Release|x64.Deploy.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
