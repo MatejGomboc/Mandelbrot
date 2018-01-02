@@ -30,9 +30,9 @@ kernel void mandelbrot (
 	float quotient = (float)iteration / (float)max_iterations;
 
 	write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(
-		sin(M_2_PI * quotient) + 0.5f,
-		sin(M_2_PI * quotient - M_PI_2) + 0.5f,
-		sin(M_2_PI * quotient - M_PI) + 0.5f,
+		0.5f * sin(M_2_PI * quotient - M_PI) + 0.5f,
+		0.5f * sin(M_2_PI * quotient - M_PI_2) + 0.5f,
+		0.5f * sin(M_2_PI * quotient) + 0.5f,
 		1.0f
 	));
 }

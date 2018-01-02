@@ -27,7 +27,7 @@ static bool supportsImages(cl::Device& dev)
 {
 	int result;
 	dev.getInfo(CL_DEVICE_IMAGE_SUPPORT, &result);
-	return (bool)result;
+	return (result != 0);
 }
 
 
@@ -113,6 +113,14 @@ __declspec(dllexport) bool init_opencl()
 	status_message = std::string();
 
 	return true;
+}
+
+
+__declspec(dllexport) void release_opencl()
+{
+	kernel = cl::Kernel();
+	queue = cl::CommandQueue();
+	context = cl::Context();
 }
 
 
