@@ -2,16 +2,23 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace mandelbrot_plotter
 {
     public partial class MainForm : Form
     {
+        private float min_x = -2.0f;
+        private float max_x = 1.0f;
+        private float min_y = -1.0f;
+        private float max_y = 1.0f;
+        private uint max_iterations = 40;
+
         public MainForm()
         {
             InitializeComponent();
 
-            MandelbrotDLL.init_opencl();
+            if (!MandelbrotDLL.init_opencl()) throw new Exception(Marshal.PtrToStringAnsi(MandelbrotDLL.get_status_message(), MandelbrotDLL.get_status_message_len()));
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -24,7 +31,8 @@ namespace mandelbrot_plotter
             // Lock the bitmap's bits.
             BitmapData bmpData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
 
-            MandelbrotDLL.get_image_opencl(bmpData.Scan0, (uint)b.Width, (uint)b.Height, -2.0f, 1.0f, -1.0f, 1.0f, 40);
+            if (!MandelbrotDLL.get_image_opencl(bmpData.Scan0, (uint)b.Width, (uint)b.Height, min_x, max_x, min_y, max_y, max_iterations))
+                throw new Exception(Marshal.PtrToStringAnsi(MandelbrotDLL.get_status_message(), MandelbrotDLL.get_status_message_len()));
 
             // Unlock the bits.
             b.UnlockBits(bmpData);
@@ -44,7 +52,8 @@ namespace mandelbrot_plotter
                 // Lock the bitmap's bits.
                 BitmapData bmpData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
 
-                MandelbrotDLL.get_image_opencl(bmpData.Scan0, (uint)b.Width, (uint)b.Height, -2.0f, 1.0f, -1.0f, 1.0f, 40);
+                if (!MandelbrotDLL.get_image_opencl(bmpData.Scan0, (uint)b.Width, (uint)b.Height, min_x, max_x, min_y, max_y, max_iterations))
+                    throw new Exception(Marshal.PtrToStringAnsi(MandelbrotDLL.get_status_message(), MandelbrotDLL.get_status_message_len()));
 
                 // Unlock the bits.
                 b.UnlockBits(bmpData);
@@ -56,6 +65,71 @@ namespace mandelbrot_plotter
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             MandelbrotDLL.release_opencl();
+        }
+
+        private void MainForm_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Down:
+                case Keys.Up:
+                case Keys.Left:
+                case Keys.Right:
+                case Keys.Add:
+                case Keys.Subtract:
+                    e.IsInputKey = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            float dist_x = max_x - min_x;
+            float dist_y = max_y - min_y;
+
+            switch (e.KeyCode)
+            {
+                case Keys.Down:
+                    max_y += dist_y * 0.1f;
+                    min_y += dist_y * 0.1f;
+                    this.OnResize(null);
+                    break;
+                case Keys.Up:
+                    max_y -= dist_y * 0.1f;
+                    min_y -= dist_y * 0.1f;
+                    this.OnResize(null);
+                    break;
+                case Keys.Left:
+                    max_x -= dist_x * 0.1f;
+                    min_x -= dist_x * 0.1f;
+                    this.OnResize(null);
+                    break;
+                case Keys.Right:
+                    max_x += dist_x * 0.1f;
+                    min_x += dist_x * 0.1f;
+                    this.OnResize(null);
+                    break;
+                case Keys.Add:
+                    max_y -= dist_y * 0.1f;
+                    min_y += dist_y * 0.1f;
+                    max_x -= dist_x * 0.1f;
+                    min_x += dist_x * 0.1f;
+                    max_iterations += 10;
+                    this.OnResize(null);
+                    break;
+                case Keys.Subtract:
+                    max_y += dist_y * 0.1f;
+                    min_y -= dist_y * 0.1f;
+                    max_x += dist_x * 0.1f;
+                    min_x -= dist_x * 0.1f;
+                    if (max_iterations > 40) max_iterations -= 10;
+                    this.OnResize(null);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

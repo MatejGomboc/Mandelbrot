@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace mandelbrot_plotter
 {
@@ -10,7 +9,7 @@ namespace mandelbrot_plotter
         public static extern int get_status_message_len();
 
         [DllImport("mandelbrot-dll.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern StringBuilder get_status_message();
+        public static extern IntPtr get_status_message();
 
         [DllImport("mandelbrot-dll.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern bool init_opencl();
