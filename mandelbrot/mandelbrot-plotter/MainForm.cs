@@ -8,10 +8,10 @@ namespace mandelbrot_plotter
 {
     public partial class MainForm : Form
     {
-        private float min_x = -2.0f;
-        private float max_x = 1.0f;
-        private float min_y = -1.0f;
-        private float max_y = 1.0f;
+        private double min_x = -2.0;
+        private double max_x = 1.0;
+        private double min_y = -1.0;
+        private double max_y = 1.0;
         private uint max_iterations = 40;
 
         public MainForm()
@@ -86,44 +86,44 @@ namespace mandelbrot_plotter
 
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
-            float dist_x = max_x - min_x;
-            float dist_y = max_y - min_y;
+            double dist_x = max_x - min_x;
+            double dist_y = max_y - min_y;
 
             switch (e.KeyCode)
             {
                 case Keys.Down:
-                    max_y += dist_y * 0.1f;
-                    min_y += dist_y * 0.1f;
+                    max_y += dist_y * 0.1;
+                    min_y += dist_y * 0.1;
                     this.OnResize(null);
                     break;
                 case Keys.Up:
-                    max_y -= dist_y * 0.1f;
-                    min_y -= dist_y * 0.1f;
+                    max_y -= dist_y * 0.1;
+                    min_y -= dist_y * 0.1;
                     this.OnResize(null);
                     break;
                 case Keys.Left:
-                    max_x -= dist_x * 0.1f;
-                    min_x -= dist_x * 0.1f;
+                    max_x -= dist_x * 0.1;
+                    min_x -= dist_x * 0.1;
                     this.OnResize(null);
                     break;
                 case Keys.Right:
-                    max_x += dist_x * 0.1f;
-                    min_x += dist_x * 0.1f;
+                    max_x += dist_x * 0.1;
+                    min_x += dist_x * 0.1;
                     this.OnResize(null);
                     break;
                 case Keys.Add:
-                    max_y -= dist_y * 0.1f;
-                    min_y += dist_y * 0.1f;
-                    max_x -= dist_x * 0.1f;
-                    min_x += dist_x * 0.1f;
+                    max_y -= dist_y * 0.1;
+                    min_y += dist_y * 0.1;
+                    max_x -= dist_x * 0.1;
+                    min_x += dist_x * 0.1;
                     max_iterations += 10;
                     this.OnResize(null);
                     break;
                 case Keys.Subtract:
-                    max_y += dist_y * 0.1f;
-                    min_y -= dist_y * 0.1f;
-                    max_x += dist_x * 0.1f;
-                    min_x -= dist_x * 0.1f;
+                    max_y += dist_y * 0.1;
+                    min_y -= dist_y * 0.1;
+                    max_x += dist_x * 0.1;
+                    min_x -= dist_x * 0.1;
                     if (max_iterations > 40) max_iterations -= 10;
                     this.OnResize(null);
                     break;

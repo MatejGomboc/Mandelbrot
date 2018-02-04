@@ -19,7 +19,7 @@ namespace mandelbrot_plotter
 
         [DllImport("mandelbrot-dll.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern bool get_image_opencl(IntPtr pixel_data,
-            uint width, uint height, float x_min, float x_max,
-            float y_min, float y_max, uint max_iterations);
+            uint width, uint height, double x_min, double x_max,
+            double y_min, double y_max, uint max_iterations);
     }
 }

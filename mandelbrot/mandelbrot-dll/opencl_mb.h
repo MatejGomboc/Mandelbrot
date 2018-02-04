@@ -9,8 +9,8 @@ extern "C" __declspec(dllexport) void release_opencl();
 
 extern "C" __declspec(dllexport) bool get_image_opencl(char* pixel_data,
 	 unsigned width, unsigned height,
-	 float x_min, float x_max,
-	 float y_min, float y_max,
+	 double x_min, double x_max,
+	 double y_min, double y_max,
 	 unsigned max_iterations);
 
 #endif

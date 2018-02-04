@@ -31,6 +31,22 @@ static bool supportsImages(cl::Device& dev)
 }
 
 
+static bool supportsDouble(cl::Device& dev)
+{
+	int result;
+	dev.getInfo(CL_DEVICE_DOUBLE_FP_CONFIG, &result);
+	return (result != 0);
+}
+
+
+static bool supportsDouble(cl::Platform& pltf)
+{
+	std::string query;
+	pltf.getInfo(CL_PLATFORM_EXTENSIONS, &query);
+	return (query.find("cl_khr_fp64") != std::string::npos);
+}
+
+
 static cl::Device getDefaultDevice()
 {
 	std::vector<cl::Platform> platforms;
@@ -40,14 +56,18 @@ static cl::Device getDefaultDevice()
 	{
 		std::vector<cl::Device> devices;
 		if (platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices) == CL_DEVICE_NOT_FOUND) continue;
+		if (!supportsDouble(platforms[i])) continue;
 
 		for (int j = 0; j < devices.size(); j++)
 		{
-			if (supportsImages(devices[j])) return devices[j];
+			if (supportsImages(devices[j]) && supportsDouble(devices[j]))
+			{
+				return devices[j];
+			}
 		}
 	}
 
-	throw std::exception("Cannot find device with image support.");
+	throw std::exception("Cannot find device with image and double floating point precision support.");
 }
 
 
@@ -124,8 +144,8 @@ __declspec(dllexport) void release_opencl()
 }
 
 
-__declspec(dllexport) bool get_image_opencl(char* pixel_data, unsigned width, unsigned height, float x_min, float x_max,
-	float y_min, float y_max, unsigned max_iterations)
+__declspec(dllexport) bool get_image_opencl(char* pixel_data, unsigned width, unsigned height, double x_min, double x_max,
+	double y_min, double y_max, unsigned max_iterations)
 {
 	try
 	{
