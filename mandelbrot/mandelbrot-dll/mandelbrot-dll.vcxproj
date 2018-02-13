@@ -12,11 +12,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mandelbrot.cl" />
+    <None Include="oclProgramFileToString.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mandelbrot-kernel.h" />
+    <ClInclude Include="opencl-support-lib.h" />
     <ClInclude Include="opencl_mb.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="opencl-support-lib.cpp" />
     <ClCompile Include="opencl_mb.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -77,9 +81,11 @@
       <AdditionalDependencies>OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"
-copy "$(ProjectDir)\mandelbrot.cl" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
+      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>python oclProgramFileToString.py -c mandelbrot.cl mandelbrot-kernel.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -100,9 +106,11 @@ copy "$(ProjectDir)\mandelbrot.cl" "$(ProjectDir)$(Platform)\$(Configuration)\bi
       <AdditionalDependencies>OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"
-copy "$(ProjectDir)\mandelbrot.cl" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
+      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>python oclProgramFileToString.py -c mandelbrot.cl mandelbrot-kernel.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -18,14 +18,26 @@
     <None Include="mandelbrot.cl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="oclProgramFileToString.py">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opencl_mb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mandelbrot-kernel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opencl-support-lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="opencl_mb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opencl-support-lib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

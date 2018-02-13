@@ -84,7 +84,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(SolutionDir)\mandelbrot-dll\OpenCL\OpenCL.dll" "$(ProjectDir)\bin\$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)\mandelbrot-dll\mandelbrot.cl" "$(ProjectDir)\bin\$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)\mandelbrot-dll\$(Platform)\$(Configuration)\bin\mandelbrot-dll.dll" "$(ProjectDir)\bin\$(Platform)\$(Configuration)\"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
