@@ -16,6 +16,7 @@ static cl::Context context;
 static cl::CommandQueue queue;
 static cl::Kernel kernel;
 static bool initialised = false;
+static bool double_support = false;
 
 
 __declspec(dllexport) int get_status_message_len()
@@ -95,13 +96,37 @@ static cl::Device get_default_device()
 		}
 	}
 
-	if (devices.size() < 1)
+	if (devices.size() > 0)
 	{
-		throw std::exception("Cannot find device with image and double floating point precision support.");
+		double_support = true;
+		return *(std::max_element(std::begin(devices), std::end(devices), compare));
 	}
 	else
 	{
+		for (int i = 0; i < platforms.size(); i++)
+		{
+			std::vector<cl::Device> devices_part;
+			if (platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &devices_part) == CL_DEVICE_NOT_FOUND) continue;
+
+			for (int j = 0; j < devices_part.size(); j++)
+			{
+				if (supports_images(devices_part[j]))
+				{
+					devices.push_back(devices_part[j]);
+				}
+			}
+		}
+	}
+
+	if (devices.size() > 0)
+	{
+		double_support = false;
 		return *(std::max_element(std::begin(devices), std::end(devices), compare));
+	}
+	else
+	{
+		double_support = false;
+		throw std::exception("Cannot find OpenCL device with image support.");
 	}
 }
 
@@ -146,6 +171,7 @@ __declspec(dllexport) bool init_opencl()
 		catch (std::exception ex)
 		{
 			status_message = std::string(ex.what());
+			double_support = false;
 			return false;
 		}
 
@@ -164,6 +190,7 @@ __declspec(dllexport) void release_opencl()
 	queue = cl::CommandQueue();
 	context = cl::Context();
 	initialised = false;
+	double_support = false;
 }
 
 
@@ -180,13 +207,13 @@ __declspec(dllexport) bool get_image_opencl(char* pixel_data, unsigned width, un
 
 			int arg_error = kernel.setArg(0, output_image);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(output_image) error: " + oclErrorCodeString(arg_error) + ".").c_str());
-			arg_error = kernel.setArg(1, x_min);
+			arg_error = kernel.setArg(1, (double_support) ? x_min : (float)x_min);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(x_min) error: " + oclErrorCodeString(arg_error) + ".").c_str());
-			arg_error = kernel.setArg(2, x_max);
+			arg_error = kernel.setArg(2, (double_support) ? x_max : (float)x_max);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(x_max) error: " + oclErrorCodeString(arg_error) + ".").c_str());
-			arg_error = kernel.setArg(3, y_min);
+			arg_error = kernel.setArg(3, (double_support) ? y_min : (float)y_min);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(y_min) error: " + oclErrorCodeString(arg_error) + ".").c_str());
-			arg_error = kernel.setArg(4, y_max);
+			arg_error = kernel.setArg(4, (double_support) ? y_max : (float)y_max);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(y_max) error: " + oclErrorCodeString(arg_error) + ".").c_str());
 			arg_error = kernel.setArg(5, max_iterations);
 			if (arg_error != CL_SUCCESS) throw std::exception(("OpenCL setArg(max_iterations) error: " + oclErrorCodeString(arg_error) + ".").c_str());

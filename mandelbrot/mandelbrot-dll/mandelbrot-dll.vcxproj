@@ -84,7 +84,7 @@
       <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>python oclProgramFileToString.py -c mandelbrot.cl mandelbrot-kernel.h</Command>
+      <Command>python oclProgramFileToString.py mandelbrot.cl mandelbrot-kernel.h -c</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
