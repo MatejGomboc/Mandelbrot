@@ -10,33 +10,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="mandelbrot.cl" />
-    <None Include="oclProgramFileToString.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="mandelbrot-kernel.h" />
-    <ClInclude Include="opencl-support-lib.h" />
-    <ClInclude Include="opencl_mb.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="opencl-support-lib.cpp" />
-    <ClCompile Include="opencl_mb.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{118DDAD7-583B-45DC-9A0E-4372759D1025}</ProjectGuid>
+    <ProjectGuid>{A10B9B92-40A1-4D2F-857E-85A306A2DA83}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>mandelbrotdll</RootNamespace>
+    <RootNamespace>mandelbrot2</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -54,24 +41,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\bin\</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\obj\</IntDir>
-    <IncludePath>$(ProjectDir)\OpenCL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\OpenCL;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\obj\</IntDir>
+    <IncludePath>$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_PATH)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\bin\</OutDir>
-    <IntDir>$(ProjectDir)$(Platform)\$(Configuration)\obj\</IntDir>
-    <IncludePath>$(ProjectDir)\OpenCL;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\OpenCL;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\bin\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\obj\</IntDir>
+    <IncludePath>$(CUDA_PATH)\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CUDA_PATH)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MANDELBROTDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
     </ClCompile>
@@ -81,10 +68,10 @@
       <AdditionalDependencies>OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
+      <Command>copy "mandelbrot.ico" "$(SolutionDir)$(Platform)\$(Configuration)\bin\mandelbrot.ico"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>python oclProgramFileToString.py mandelbrot.cl mandelbrot-kernel.h -c</Command>
+      <Command>python ocl_source_file_to_string.py mandelbrot.cl mandelbrot_kernel.h -c</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -94,7 +81,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MANDELBROTDLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
     </ClCompile>
@@ -106,12 +93,23 @@
       <AdditionalDependencies>OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)\OpenCL\OpenCL.dll" "$(ProjectDir)$(Platform)\$(Configuration)\bin\"</Command>
+      <Command>copy "mandelbrot.ico" "$(SolutionDir)$(Platform)\$(Configuration)\bin\mandelbrot.ico"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>python oclProgramFileToString.py -c mandelbrot.cl mandelbrot-kernel.h</Command>
+      <Command>python ocl_source_file_to_string.py mandelbrot.cl mandelbrot_kernel.h -c</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="plotter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="plotter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mandelbrot.cl" />
+    <None Include="ocl_source_file_to_string.py" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

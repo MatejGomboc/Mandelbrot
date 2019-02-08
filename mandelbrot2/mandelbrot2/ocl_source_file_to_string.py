@@ -1,6 +1,21 @@
 ﻿#!/usr/bin/python
 
-import sys, argparse, re
+# Copyright (C) 2019 Matej Gomboc https://github.com/MatejGomboc
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see http://www.gnu.org/licenses/.
+
+import os, sys, argparse, re
 
 def comment_remover(text):
 	def replacer(match):
@@ -50,14 +65,21 @@ if __name__ == "__main__":
 	if not args.outputFileName.lower().endswith(".h"):
 		sys.exit("invalid output file extension: " + args.outputFileName)
 
+	# preform clean
+	if os.path.exists(args.outputFileName):
+		os.remove(args.outputFileName)
+
 	if args.verbose:
 		print("input file: " + args.inputFileName)
 		print("output file: " + args.outputFileName)
 
-	stringSource = open(args.inputFileName, 'r').read()
+	try:
+		stringSource = open(args.inputFileName, 'r').read()
+	except FileNotFoundError:
+		sys.exit("input file not found: " + args.inputFileName)
 
 	if args.verbose:
-		print("\nOpenCL source:")
+		print("\noriginal OpenCL source:")
 		print(stringSource)
 
 	if args.compact:
@@ -66,16 +88,16 @@ if __name__ == "__main__":
 	stringSource = stringSource.replace("\\", "\\\\") # for multi-line strings
 	stringSource = stringSource.replace("\"", "\\\"") # for strings
 	stringSource = stringSource.replace("\'", "\\\'") # for chars
-	stringSource = stringSource.replace("\\\a", "\\\\\\\a") # if inside a string
-	stringSource = stringSource.replace("\\\b", "\\\\\\\b") # if inside a string
-	stringSource = stringSource.replace("\\\f", "\\\\\\\f") # if inside a string
-	stringSource = stringSource.replace("\\\r", "\\\\\\\r") # if inside a string
-	stringSource = stringSource.replace("\\\t", "\\\\\\\t") # if inside a string
-	stringSource = stringSource.replace("\\\v", "\\\\\\\v") # if inside a string
-	stringSource = stringSource.replace("\\\n", "\\\\\\\n") # if inside a string
+	stringSource = stringSource.replace("\\\a", "\\\\\\\a") # if '\a' inside a string
+	stringSource = stringSource.replace("\\\b", "\\\\\\\b") # if '\b' inside a string
+	stringSource = stringSource.replace("\\\f", "\\\\\\\f") # if '\f' inside a string
+	stringSource = stringSource.replace("\\\r", "\\\\\\\r") # if '\r' inside a string
+	stringSource = stringSource.replace("\\\t", "\\\\\\\t") # if '\t' inside a string
+	stringSource = stringSource.replace("\\\v", "\\\\\\\v") # if '\v' inside a string
+	stringSource = stringSource.replace("\\\n", "\\\\\\\n") # if '\n' inside a string
 	stringSource = stringSource.replace("\n", "\\n\"\n\"") # for correct ending of new multi-line string
 
-	stringSource = "const char* " + args.inputFileName[:-3].replace("-", "_") + "_opencl_source_string = \n\"" + stringSource + "\";\n"
+	stringSource = "const char* " + args.inputFileName[:-3].replace("-", "_") + "_ocl_source = \n\"" + stringSource
 
 	stringSource = empty_string_remover(stringSource) # remove redundant spaces and tabs
 	stringSource = stringSource.replace("\"\\n\"", "") # remove empty multi-line strings
@@ -85,6 +107,8 @@ if __name__ == "__main__":
 		stringSource = empty_line_remover(stringSource) # remove empty lines
 
 	stringSource = stringSource.replace("\t", "    ") # replace tabs with 4 spaces
+
+	stringSource = stringSource + "\\0" + "\"\n;\n" # zero-terminate string
 
 	if args.verbose:
 		print("source as C++ char string:")
