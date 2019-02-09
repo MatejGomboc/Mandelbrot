@@ -25,13 +25,18 @@ class Plotter
 {
 private:
 	std::vector<cl_device_id> m_ocl_devices;
+	cl_context m_ocl_context;
+	cl_kernel m_ocl_kernel;
+	cl_command_queue m_ocl_command_queue;
+	bool m_device_selected;
 	static std::string ocl_error_string(cl_int error_code);
 public:
 	Plotter();
 	~Plotter();
 	std::vector<std::string> get_device_names() const;
 	bool select_device(int dev_indx, std::string& error_message);
-	bool get_image(std::vector<char>& pixel_data, int width, int height, std::string& error_message);
+	bool get_image(std::vector<char>& pixel_data, int width, int height,
+		float x_min, float x_max, float y_min, float y_max, std::string& error_message);
 };
 
 #endif

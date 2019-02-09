@@ -21,227 +21,42 @@ along with this program. If not, see http://www.gnu.org/licenses/. */
 #include "mandelbrot_kernel.h"
 
 
-Plotter::Plotter()
+Plotter::Plotter() :
+	m_device_selected(false)
 {
 	// get number of OpenCL platforms
 	cl_uint num_ocl_platforms;
-	cl_int ocl_error_code = clGetPlatformIDs(0, nullptr, &num_ocl_platforms);
-	if (ocl_error_code != CL_SUCCESS)
-		throw std::exception(("(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
-		"OpenCL error: " + ocl_error_string(ocl_error_code)).c_str());
+	clGetPlatformIDs(0, nullptr, &num_ocl_platforms);
 
-	// get OpenCL platform IDs
-	std::vector<cl_platform_id> ocl_platforms(num_ocl_platforms);
-	ocl_error_code = clGetPlatformIDs(num_ocl_platforms, ocl_platforms.data(), nullptr);
-	if (ocl_error_code != CL_SUCCESS)
-		throw std::exception(("(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
-		"OpenCL error: " + ocl_error_string(ocl_error_code)).c_str());
-
-	// query all OpenCL devices
-	for (cl_uint ocl_platform_indx = 0; ocl_platform_indx < num_ocl_platforms; ocl_platform_indx++)
+	if (num_ocl_platforms > 0)
 	{
-		cl_uint num_ocl_devices_part;
-		ocl_error_code = clGetDeviceIDs(ocl_platforms[ocl_platform_indx], CL_DEVICE_TYPE_ALL, 0, nullptr, &num_ocl_devices_part);
-		if (ocl_error_code != CL_SUCCESS)
-			throw std::exception(("(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
-			"OpenCL error: " + ocl_error_string(ocl_error_code)).c_str());
+		// get OpenCL platform IDs
+		std::vector<cl_platform_id> ocl_platforms(num_ocl_platforms);
+		clGetPlatformIDs(num_ocl_platforms, ocl_platforms.data(), nullptr);
 
-		std::vector<cl_device_id> ocl_devices_part(num_ocl_devices_part);
-		ocl_error_code = clGetDeviceIDs(ocl_platforms[ocl_platform_indx], CL_DEVICE_TYPE_ALL, num_ocl_devices_part, ocl_devices_part.data(), nullptr);
-		if (ocl_error_code != CL_SUCCESS)
-			throw std::exception(("(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
-			"OpenCL error: " + ocl_error_string(ocl_error_code)).c_str());
-
-		m_ocl_devices.insert(m_ocl_devices.end(), ocl_devices_part.begin(), ocl_devices_part.end());
-	}
-
-	// compile and run kernel on each device, if error remove device from list
-	for (cl_uint ocl_device_indx = 0; ocl_device_indx < (cl_uint)m_ocl_devices.size(); ocl_device_indx++)
-	{
-		cl_context ocl_context = clCreateContext(NULL, 1, &m_ocl_devices[ocl_device_indx], nullptr, nullptr, &ocl_error_code);
-		if (ocl_error_code != CL_SUCCESS)
+		// query all OpenCL devices
+		for (cl_uint ocl_platform_indx = 0; ocl_platform_indx < num_ocl_platforms; ocl_platform_indx++)
 		{
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
+			cl_uint num_ocl_devices_part;
+			clGetDeviceIDs(ocl_platforms[ocl_platform_indx], CL_DEVICE_TYPE_ALL, 0, nullptr, &num_ocl_devices_part);
 
-		cl_program ocl_program = clCreateProgramWithSource(ocl_context, 1, &mandelbrot_ocl_source, nullptr, &ocl_error_code);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
+			if (num_ocl_devices_part > 0)
+			{
+				std::vector<cl_device_id> ocl_devices_part(num_ocl_devices_part);
+				clGetDeviceIDs(ocl_platforms[ocl_platform_indx], CL_DEVICE_TYPE_ALL, num_ocl_devices_part, ocl_devices_part.data(), nullptr);
+				m_ocl_devices.insert(m_ocl_devices.end(), ocl_devices_part.begin(), ocl_devices_part.end());
+			}
 		}
-
-		ocl_error_code = clBuildProgram(ocl_program, 0, nullptr, nullptr, nullptr, nullptr);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		cl_kernel ocl_kernel = clCreateKernel(ocl_program, "mandelbrot", &ocl_error_code);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_image_format ocl_image_format = {CL_RGBA, CL_UNORM_INT8};
-		cl_mem ocl_image = clCreateImage2D(ocl_context, CL_MEM_WRITE_ONLY, &ocl_image_format, 1000, 1000, 0, nullptr, &ocl_error_code);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		ocl_error_code = clSetKernelArg(ocl_kernel, 0, sizeof(cl_mem), &ocl_image);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_float x_min = 0.0f;
-		ocl_error_code = clSetKernelArg(ocl_kernel, 1, sizeof(cl_float), &x_min);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_float x_max = 1.0f;
-		ocl_error_code = clSetKernelArg(ocl_kernel, 2, sizeof(cl_float), &x_max);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_float y_min = 0.0f;
-		ocl_error_code = clSetKernelArg(ocl_kernel, 3, sizeof(cl_float), &y_min);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_float y_max = 0.0f;
-		ocl_error_code = clSetKernelArg(ocl_kernel, 4, sizeof(cl_float), &y_max);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const cl_uint max_iterations = 100;
-		ocl_error_code = clSetKernelArg(ocl_kernel, 4, sizeof(cl_uint), &max_iterations);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		cl_command_queue ocl_command_queue = clCreateCommandQueue(ocl_context, m_ocl_devices[ocl_device_indx], 0, &ocl_error_code);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const size_t ocl_global_work_offset[2] = {0, 0};
-		const size_t ocl_global_work_size[2] = {1000, 1000};
-		ocl_error_code = clEnqueueNDRangeKernel(ocl_command_queue, ocl_kernel, 2, ocl_global_work_offset, ocl_global_work_size,
-			nullptr, 0, nullptr, nullptr);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			clReleaseCommandQueue(ocl_command_queue);
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		const size_t ocl_origin[3] = {0, 0, 0};
-		const size_t ocl_region[3] = {1000, 1000, 1};
-		char* pixel_data = new char[1000 * 1000 * 4];
-		ocl_error_code = clEnqueueReadImage(ocl_command_queue, ocl_image, true, ocl_origin, ocl_region, 0, 0, pixel_data, 0, nullptr, nullptr);
-		if (ocl_error_code != CL_SUCCESS)
-		{
-			delete [] pixel_data;
-			clReleaseCommandQueue(ocl_command_queue);
-			clReleaseMemObject(ocl_image);
-			clReleaseKernel(ocl_kernel);
-			clReleaseProgram(ocl_program);
-			clReleaseContext(ocl_context);
-			m_ocl_devices.erase(std::remove(m_ocl_devices.begin(), m_ocl_devices.end(), m_ocl_devices[ocl_device_indx]), m_ocl_devices.end());
-			ocl_device_indx--;
-			continue;
-		}
-
-		delete[] pixel_data;
-		clReleaseCommandQueue(ocl_command_queue);
-		clReleaseMemObject(ocl_image);
-		clReleaseKernel(ocl_kernel);
-		clReleaseProgram(ocl_program);
-		clReleaseContext(ocl_context);
-		continue;
 	}
 }
 
 
 Plotter::~Plotter()
 {
+	m_device_selected = false;
+	clReleaseKernel(m_ocl_kernel);
+	clReleaseCommandQueue(m_ocl_command_queue);
+	clReleaseContext(m_ocl_context);
 }
 
 
@@ -370,4 +185,223 @@ std::string Plotter::ocl_error_string(cl_int error_code)
 	default:
 		return "UNKNOWN_OCL_ERROR_CODE(" + std::to_string(error_code) + ")";
 	}
+}
+
+
+std::vector<std::string> Plotter::get_device_names() const
+{
+	std::vector<std::string> device_names;
+
+	for (cl_uint ocl_device_indx = 0; ocl_device_indx < (cl_uint)m_ocl_devices.size(); ocl_device_indx++)
+	{
+		size_t device_name_length;
+		clGetDeviceInfo(m_ocl_devices[ocl_device_indx], CL_DEVICE_NAME, 0, nullptr, &device_name_length);
+		std::string device_name;
+		device_name.resize(device_name_length);
+		clGetDeviceInfo(m_ocl_devices[ocl_device_indx], CL_DEVICE_NAME, device_name_length, (void*)device_name.c_str(), nullptr);
+		device_names.push_back(device_name);
+	}
+
+	return device_names;
+}
+
+
+bool Plotter::select_device(int dev_indx, std::string& error_message)
+{
+	m_device_selected = false;
+	clReleaseKernel(m_ocl_kernel);
+	clReleaseCommandQueue(m_ocl_command_queue);
+	clReleaseContext(m_ocl_context);
+
+	cl_int ocl_error_code;
+	cl_context ocl_context = clCreateContext(NULL, 1, &m_ocl_devices[dev_indx], nullptr, nullptr, &ocl_error_code);
+	if (ocl_error_code != CL_SUCCESS)
+	{
+		error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+			"OpenCL error: " + ocl_error_string(ocl_error_code);
+		return false;
+	}
+
+	cl_program ocl_program = clCreateProgramWithSource(ocl_context, 1, &mandelbrot_ocl_source, nullptr, &ocl_error_code);
+	if (ocl_error_code != CL_SUCCESS)
+	{
+		clReleaseContext(ocl_context);
+		error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+			"OpenCL error: " + ocl_error_string(ocl_error_code);
+		return false;
+	}
+
+	ocl_error_code = clBuildProgram(ocl_program, 0, nullptr, nullptr, nullptr, nullptr);
+	if (ocl_error_code != CL_SUCCESS)
+	{
+		clReleaseProgram(ocl_program);
+		clReleaseContext(ocl_context);
+		error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+			"OpenCL error: " + ocl_error_string(ocl_error_code);
+		return false;
+	}
+
+	cl_kernel ocl_kernel = clCreateKernel(ocl_program, "mandelbrot", &ocl_error_code);
+	if (ocl_error_code != CL_SUCCESS)
+	{
+		clReleaseProgram(ocl_program);
+		clReleaseContext(ocl_context);
+		error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+			"OpenCL error: " + ocl_error_string(ocl_error_code);
+		return false;
+	}
+
+	clReleaseProgram(ocl_program);
+
+	cl_command_queue ocl_command_queue = clCreateCommandQueue(ocl_context, m_ocl_devices[dev_indx], 0, &ocl_error_code);
+	if (ocl_error_code != CL_SUCCESS)
+	{
+		clReleaseKernel(ocl_kernel);
+		clReleaseContext(ocl_context);
+		error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+			"OpenCL error: " + ocl_error_string(ocl_error_code);
+		return false;
+	}
+
+	m_ocl_context = ocl_context;
+	m_ocl_kernel = ocl_kernel;
+	m_ocl_command_queue = ocl_command_queue;
+	m_device_selected = true;
+	return true;
+}
+
+
+bool Plotter::get_image(std::vector<char>& pixel_data, int width, int height,
+	float x_min, float x_max, float y_min, float y_max, std::string& error_message)
+{
+	if (m_device_selected)
+	{
+		cl_int ocl_error_code;
+		const cl_image_format ocl_image_format = { CL_RGBA, CL_UNORM_INT8 };
+		cl_mem ocl_image = clCreateImage2D(m_ocl_context, CL_MEM_WRITE_ONLY, &ocl_image_format, width, height, 0, nullptr, &ocl_error_code);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 0, sizeof(cl_mem), &ocl_image);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 1, sizeof(float), &x_min);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 2, sizeof(float), &x_max);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 3, sizeof(float), &y_min);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 4, sizeof(float), &y_max);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		const cl_uint max_iterations = 100;
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 4, sizeof(cl_uint), &max_iterations);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		const size_t ocl_global_work_offset[2] = { 0, 0 };
+		const size_t ocl_global_work_size[2] = { width, height };
+		ocl_error_code = clEnqueueNDRangeKernel(m_ocl_command_queue, m_ocl_kernel, 2, ocl_global_work_offset,
+			ocl_global_work_size, nullptr, 0, nullptr, nullptr);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		const size_t ocl_origin[3] = { 0, 0, 0 };
+		const size_t ocl_region[3] = { width, height, 1 };
+		ocl_error_code = clEnqueueReadImage(m_ocl_command_queue, ocl_image, true, ocl_origin, ocl_region, 0, 0, pixel_data.data(), 0, nullptr, nullptr);
+		if (ocl_error_code != CL_SUCCESS)
+		{
+			m_device_selected = false;
+			clReleaseMemObject(ocl_image);
+			clReleaseKernel(m_ocl_kernel);
+			clReleaseCommandQueue(m_ocl_command_queue);
+			clReleaseContext(m_ocl_context);
+			error_message += "(" + std::string(__FILE__) + ", " + std::to_string(__LINE__) + ") " +
+				"OpenCL error: " + ocl_error_string(ocl_error_code);
+			return false;
+		}
+
+		clReleaseMemObject(ocl_image);
+	}
+
+	return true;
 }

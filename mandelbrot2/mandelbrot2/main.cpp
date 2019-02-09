@@ -22,16 +22,118 @@ along with this program. If not, see http://www.gnu.org/licenses/. */
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <tchar.h>
+#include <string>
 #include "plotter.h"
 
 
-#define IDD_DEVICE_CBO 101
+// trim from left
+inline std::string& ltrim(std::string& s, const char* t = " \t\n\r\f\v")
+{
+	s.erase(0, s.find_first_not_of(t));
+	return s;
+}
+
+// trim from right
+inline std::string& rtrim(std::string& s, const char* t = " \t\n\r\f\v")
+{
+	s.erase(s.find_last_not_of(t) + 1);
+	return s;
+}
+
+// trim from left & right
+inline std::string& trim(std::string& s, const char* t = " \t\n\r\f\v")
+{
+	return ltrim(rtrim(s, t), t);
+}
+
+// std::string to std::wstring
+inline std::wstring to_wstring(std::string str)
+{
+	std::wstring wstr;
+	wstr.assign(str.begin(), str.end());
+	return wstr;
+}
 
 
-Plotter plotter;
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	#define IDD_DEVICE_CBO 101
 
+	static Plotter plotter;
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	switch (message)
+	{
+	case WM_CREATE:
+		{
+			HWND hWndComboBox = CreateWindowEx(
+				NULL,
+				L"COMBOBOX",
+				L"device_select",
+				CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE | WS_VSCROLL,
+				0, 0, 300, 10000,
+				hWnd,
+				(HMENU)IDD_DEVICE_CBO,
+				(HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+				NULL
+			);
+
+			if (!hWndComboBox)
+				return -1;
+
+			std::vector<std::string> device_names = plotter.get_device_names();
+
+			for (int i = 0; i < device_names.size(); i++)
+			{
+				trim(device_names[i]);
+				SendMessage(hWndComboBox, CB_ADDSTRING, NULL, (LPARAM)to_wstring(device_names[i]).c_str());
+			}
+
+			return 0;
+		}
+	case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+			case IDD_DEVICE_CBO:
+				{
+					switch (HIWORD(wParam))
+					{
+						case CBN_SELCHANGE:
+						{
+							LRESULT selection = SendMessage((HWND)lParam, CB_GETCURSEL, (WPARAM)NULL, (LPARAM)NULL);
+							std::string error_message;
+							if (!plotter.select_device(selection, error_message))
+							{
+								MessageBox(
+									hWnd,
+									(LPCWSTR)to_wstring(error_message).c_str(),
+									(LPCWSTR)L"OpenCL Error",
+									MB_OK | MB_ICONWARNING | MB_DEFBUTTON1 | MB_APPLMODAL | MB_RIGHT
+								);
+							}
+							return 0;
+						}
+					}
+				}
+			}
+		}
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc = BeginPaint(hWnd, &ps);
+			// TODO: Add any drawing code here...
+			EndPaint(hWnd, &ps);
+			return 0;
+		}
+	case WM_DESTROY:
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+}
 
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nCmdShow)
@@ -64,7 +166,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
 		NULL,
 		hInstance,
 		NULL
-	);
+		);
 
 	if (!hWnd)
 		return -1;
@@ -80,75 +182,4 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
 	}
 
 	return (int)msg.wParam;
-}
-
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_CREATE:
-		{
-			HWND hWndComboBox = CreateWindowEx(
-				NULL,
-				L"COMBOBOX",
-				L"device_select",
-				CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE | WS_VSCROLL,
-				0, 0, 240, 120,
-				hWnd,
-				(HMENU)IDD_DEVICE_CBO,
-				(HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
-				NULL
-			);
-
-			if (!hWndComboBox)
-				return -1;
-
-			std::vector<std::string> device_names = plotter.get_device_names();
-
-			for (int i = 0; i < device_names.size(); i++)
-			{
-				SendMessage(hWndComboBox, CB_ADDSTRING, NULL, (LPARAM)L"A");
-				SendMessage(hWndComboBox, CB_ADDSTRING, NULL, (LPARAM)L"B");
-				SendMessage(hWndComboBox, CB_ADDSTRING, NULL, (LPARAM)L"C");
-				SendMessage(hWndComboBox, CB_ADDSTRING, NULL, (LPARAM)L"D");
-			}
-			
-			//SendMessage(hWndComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)NULL);
-
-			return 0;
-		}
-	case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-			case IDD_DEVICE_CBO:
-				{
-					switch (HIWORD(wParam))
-					{
-						case CBN_SELCHANGE:
-						{
-							LRESULT selection = SendMessage((HWND)lParam, CB_GETCURSEL, (WPARAM)NULL, (LPARAM)NULL);
-							return 0;
-						}
-					}
-				}
-			}
-		}
-	case WM_PAINT:
-		{
-			PAINTSTRUCT ps;
-			HDC hdc = BeginPaint(hWnd, &ps);
-			// TODO: Add any drawing code here...
-			EndPaint(hWnd, &ps);
-			return 0;
-		}
-	case WM_DESTROY:
-		{
-			PostQuitMessage(0);
-			return 0;
-		}
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
 }
