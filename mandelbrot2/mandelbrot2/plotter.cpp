@@ -210,6 +210,12 @@ std::vector<std::string> Plotter::get_device_names() const
 }
 
 
+bool Plotter::is_device_selected() const
+{
+	return m_device_selected;
+}
+
+
 bool Plotter::select_device(int dev_indx, std::string& error_message)
 {
 	if (m_device_selected)

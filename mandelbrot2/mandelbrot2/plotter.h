@@ -34,6 +34,7 @@ public:
 	Plotter();
 	~Plotter();
 	std::vector<std::string> get_device_names() const;
+	bool is_device_selected() const;
 	bool select_device(int dev_indx, std::string& error_message);
 	bool get_image(char* pixel_data, int width, int height,
 		float x_min, float x_max, float y_min, float y_max, std::string& error_message);
