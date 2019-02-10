@@ -115,47 +115,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 							{
 								RECT client_rect;
 								GetClientRect(hWnd, &client_rect);
-
-								BITMAPINFOHEADER bmih;
-								bmih.biSize = sizeof(BITMAPINFOHEADER);
-								bmih.biWidth = client_rect.right - client_rect.left;
-								bmih.biHeight = client_rect.top - client_rect.bottom;
-								bmih.biPlanes = 1;
-								bmih.biBitCount = 4 * 8;
-								bmih.biCompression = BI_RGB;
-								bmih.biSizeImage = 0;
-								bmih.biXPelsPerMeter = 10;
-								bmih.biYPelsPerMeter = 10;
-								bmih.biClrUsed = 0;
-								bmih.biClrImportant = 0;
-
-								BITMAPINFO dbmi;
-								dbmi.bmiHeader = bmih;
-								dbmi.bmiColors->rgbBlue = 0;
-								dbmi.bmiColors->rgbGreen = 0;
-								dbmi.bmiColors->rgbRed = 0;
-								dbmi.bmiColors->rgbReserved = 0;
-
-								char* pixel_data = new char[4 * bmih.biWidth * (-bmih.biHeight)];
-
-								std::string error_message;
-								if (!plotter.get_image(pixel_data, bmih.biWidth, -bmih.biHeight, -1.0f, 1.0f, -1.0f, 1.0f, error_message))
-								{
-									MessageBox(
-										hWnd,
-										(LPCWSTR)to_wstring(error_message).c_str(),
-										(LPCWSTR)L"OpenCL Error",
-										MB_OK | MB_ICONWARNING | MB_DEFBUTTON1 | MB_APPLMODAL
-										);
-								}
-
-								delete[] pixel_data;
-
-								//HDC hdc = GetDC(hWnd);
-								//HBITMAP hbmp = CreateDIBitmap(hdc, &bmih, CBM_INIT, pixel_data.data(), &dbmi, DIB_RGB_COLORS);
-								//ReleaseDC(hWnd, hdc);
-
-								//SendMessage(hWnd, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbmp);
+								InvalidateRect(hWnd, &client_rect, false);
 							}
 							return 0;
 						}
@@ -167,7 +127,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
-			// TODO: Add any drawing code here...
+
+			RECT client_rect;
+			GetClientRect(hWnd, &client_rect);
+
+			BITMAPINFOHEADER bmih;
+			bmih.biSize = sizeof(BITMAPINFOHEADER);
+			bmih.biWidth = client_rect.right - client_rect.left;
+			bmih.biHeight = client_rect.top - client_rect.bottom;
+			bmih.biPlanes = 1;
+			bmih.biBitCount = 4 * 8;
+			bmih.biCompression = BI_RGB;
+			bmih.biSizeImage = 0;
+			bmih.biXPelsPerMeter = 10;
+			bmih.biYPelsPerMeter = 10;
+			bmih.biClrUsed = 0;
+			bmih.biClrImportant = 0;
+
+			BITMAPINFO dbmi;
+			dbmi.bmiHeader = bmih;
+			dbmi.bmiColors->rgbBlue = 0;
+			dbmi.bmiColors->rgbGreen = 0;
+			dbmi.bmiColors->rgbRed = 0;
+			dbmi.bmiColors->rgbReserved = 0;
+
+			char* pixel_data = new char[4 * bmih.biWidth * (-bmih.biHeight)];
+
+			std::string error_message;
+			if (!plotter.get_image(pixel_data, bmih.biWidth, -bmih.biHeight, -1.0f, 1.0f, -1.0f, 1.0f, error_message))
+			{
+				MessageBox(
+					hWnd,
+					(LPCWSTR)to_wstring(error_message).c_str(),
+					(LPCWSTR)L"OpenCL Error",
+					MB_OK | MB_ICONWARNING | MB_DEFBUTTON1 | MB_APPLMODAL
+				);
+			}
+
+			HBITMAP hbmp = CreateDIBitmap(hdc, &bmih, CBM_INIT, pixel_data, &dbmi, DIB_RGB_COLORS);
+
+			HDC hdcMem = CreateCompatibleDC(hdc);
+			HGDIOBJ hbmp_old = SelectObject(hdcMem, hbmp);
+			BitBlt(hdc, 0, 0, bmih.biWidth, -bmih.biHeight, hdcMem, 0, 0, SRCCOPY);
+			SelectObject(hdcMem, hbmp_old);
+			
+			DeleteDC(hdcMem);
+			DeleteObject(hbmp);
+			DeleteObject(hbmp_old);
+			delete[] pixel_data;
+
 			EndPaint(hWnd, &ps);
 			return 0;
 		}

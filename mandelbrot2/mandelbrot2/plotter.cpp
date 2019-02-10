@@ -363,8 +363,8 @@ bool Plotter::get_image(char* pixel_data, int width, int height,
 			return false;
 		}
 
-		const cl_uint max_iterations = 100;
-		ocl_error_code = clSetKernelArg(m_ocl_kernel, 4, sizeof(cl_uint), &max_iterations);
+		const cl_uint max_iterations = 90;
+		ocl_error_code = clSetKernelArg(m_ocl_kernel, 5, sizeof(cl_uint), &max_iterations);
 		if (ocl_error_code != CL_SUCCESS)
 		{
 			m_device_selected = false;
