@@ -53,10 +53,14 @@ Plotter::Plotter() :
 
 Plotter::~Plotter()
 {
+	if (m_device_selected)
+	{
+		clReleaseKernel(m_ocl_kernel);
+		clReleaseCommandQueue(m_ocl_command_queue);
+		clReleaseContext(m_ocl_context);
+	}
+
 	m_device_selected = false;
-	clReleaseKernel(m_ocl_kernel);
-	clReleaseCommandQueue(m_ocl_command_queue);
-	clReleaseContext(m_ocl_context);
 }
 
 
@@ -208,10 +212,14 @@ std::vector<std::string> Plotter::get_device_names() const
 
 bool Plotter::select_device(int dev_indx, std::string& error_message)
 {
+	if (m_device_selected)
+	{
+		clReleaseKernel(m_ocl_kernel);
+		clReleaseCommandQueue(m_ocl_command_queue);
+		clReleaseContext(m_ocl_context);
+	}
+
 	m_device_selected = false;
-	clReleaseKernel(m_ocl_kernel);
-	clReleaseCommandQueue(m_ocl_command_queue);
-	clReleaseContext(m_ocl_context);
 
 	cl_int ocl_error_code;
 	cl_context ocl_context = clCreateContext(NULL, 1, &m_ocl_devices[dev_indx], nullptr, nullptr, &ocl_error_code);
@@ -271,13 +279,13 @@ bool Plotter::select_device(int dev_indx, std::string& error_message)
 }
 
 
-bool Plotter::get_image(std::vector<char>& pixel_data, int width, int height,
+bool Plotter::get_image(char* pixel_data, int width, int height,
 	float x_min, float x_max, float y_min, float y_max, std::string& error_message)
 {
 	if (m_device_selected)
 	{
 		cl_int ocl_error_code;
-		const cl_image_format ocl_image_format = { CL_RGBA, CL_UNORM_INT8 };
+		const cl_image_format ocl_image_format = { CL_BGRA, CL_UNORM_INT8 };
 		cl_mem ocl_image = clCreateImage2D(m_ocl_context, CL_MEM_WRITE_ONLY, &ocl_image_format, width, height, 0, nullptr, &ocl_error_code);
 		if (ocl_error_code != CL_SUCCESS)
 		{
@@ -387,7 +395,7 @@ bool Plotter::get_image(std::vector<char>& pixel_data, int width, int height,
 
 		const size_t ocl_origin[3] = { 0, 0, 0 };
 		const size_t ocl_region[3] = { width, height, 1 };
-		ocl_error_code = clEnqueueReadImage(m_ocl_command_queue, ocl_image, true, ocl_origin, ocl_region, 0, 0, pixel_data.data(), 0, nullptr, nullptr);
+		ocl_error_code = clEnqueueReadImage(m_ocl_command_queue, ocl_image, true, ocl_origin, ocl_region, 0, 0, pixel_data, 0, nullptr, nullptr);
 		if (ocl_error_code != CL_SUCCESS)
 		{
 			m_device_selected = false;

@@ -11,7 +11,7 @@ const char* mandelbrot_ocl_source =
 "        const uint max_iterations\n"
 "    )\n"
 "{\n"
-"    write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(0.5, 0.5, 0.5, 1.0));\n"
+"    write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(0.5f, 0.5f, 0.5f, 1.0f));\n"
 "}\n"
 "\0"
 ;

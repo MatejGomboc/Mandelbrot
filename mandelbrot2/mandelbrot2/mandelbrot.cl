@@ -33,7 +33,7 @@ kernel void mandelbrot (
 
 	/*float x = 0.0f;
 	float y = 0.0f;
-	uint iteration = 0f;
+	uint iteration = 0;
 	float temp = 0.0f;*/
 
 	/*while ((x * x + y * y < 2.0f * 2.0f) && (iteration < max_iterations))
@@ -47,11 +47,11 @@ kernel void mandelbrot (
 	/*float quotient = (float)iteration / (float)max_iterations;*/
 
 	/*write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(
-		0.5 * sin(M_2_PI * quotient - M_PI) + 0.5,
-		0.5 * sin(M_2_PI * quotient - M_PI_2) + 0.5,
-		0.5 * sin(M_2_PI * quotient) + 0.5,
-		1.0
+		0.5f * sin(M_2_PI * quotient - M_PI) + 0.5f,
+		0.5f * sin(M_2_PI * quotient - M_PI_2) + 0.5f,
+		0.5f * sin(M_2_PI * quotient) + 0.5f,
+		1.0f
 	));*/
 
-	write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(0.5, 0.5, 0.5, 1.0));
+	write_imagef(output_image, (int2)(get_global_id(0), get_global_id(1)), (float4)(0.5f, 0.5f, 0.5f, 1.0f));
 }
